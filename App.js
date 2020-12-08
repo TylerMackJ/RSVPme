@@ -15,12 +15,15 @@ export default function App() {
         <Stack.Screen
           name="Login"
           component={LoginScreen}
+          options={{
+            headerShown: false,
+          }}
         />
         <Stack.Screen
           name="Map"
           component={MapScreen}
           options={{
-            headerShown: false
+            headerShown: false,
           }}
         />
       </Stack.Navigator>
