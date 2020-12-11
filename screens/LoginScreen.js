@@ -3,7 +3,10 @@ import { View, Text, Button } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 import ColoredButton from '../components/ColoredButton';
 import { requestOID, signInAsync, providers, getCachedAuthAsync } from '../functionality/OAuth';
-import { globalStyle } from '../GlobalStyle';
+import { backendUrl, globalStyle } from '../Globals';
+
+var axios = require('axios');
+var qs = require('qs')
 
 export default function LoginScreen({ navigation }) {
     const [username, setUsername] = useState("");
@@ -20,12 +23,24 @@ export default function LoginScreen({ navigation }) {
             />
             <ColoredButton
                 text="Login"
-                onPress={() => login(username)}
+                onPress={async () => {
+                    if(await login(username)) {
+                        console.log("Account created");
+                    } else {
+                        console.log("Failed to create account");
+                    }
+                }}
                 color="green"
             />
             <ColoredButton
                 text="Create Account"
-                onPress={() => createAccount(username)}
+                onPress={async () => {
+                    if(await createAccount(username)) {
+                        console.log("Account created");
+                    } else {
+                        console.log("Failed to create account");
+                    }
+                }}
                 color="blue"
             />
         </View>
@@ -44,10 +59,62 @@ function onChangeUsername(username, setUsername, setInputSyle) {
 }
 
 async function login(username) {
-    // check if username is taken
-    console.log(await requestOID(await signInAsync(providers.google), providers.google));
+    return requestOID(await signInAsync(providers.google), providers.google)
+    .then(oid => {
+        if (oid) {
+            var data = qs.stringify({
+                'username': username,
+                'oid': oid 
+            });
+            var config = {
+                method: 'get',
+                url: `${backendUrl}/users`,
+                headers: { 
+                'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                data: data
+            };
+               
+            axios(config)
+            .then(function (response) {
+                return response.data._id ? true : false;
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+        } else {
+            return false
+        }
+    })    
 }
 
 async function createAccount(username) {
-    console.log(`Creating account as ${username}`);
+    return requestOID(await signInAsync(providers.google), providers.google)
+    .then(oid => {
+        if (oid) {
+            var data = qs.stringify({
+                'username': username,
+                'oid': oid
+            });
+            var config = {
+                method: 'post',
+                url: `${backendUrl}/users`,
+                headers: { 
+                'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                data: data
+            };
+            
+            return axios(config)
+            .then(function (response) {
+                return response.data._id ? true : false;
+            })
+            .catch(function (error) {
+                console.log(error);
+                return false;
+            });
+        } else {
+            return false;
+        }
+    })
 }

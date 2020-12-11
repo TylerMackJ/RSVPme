@@ -1,5 +1,7 @@
 import { StyleSheet } from 'react-native';
 
+export const backendUrl = "https://brown-owl-72.loca.lt"
+
 export const globalStyle = StyleSheet.create({
     centerView: {
         flex: 1,
